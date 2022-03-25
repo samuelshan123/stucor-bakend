@@ -3,7 +3,7 @@ const db=require('./db_connection')
 const app = express()
 const port = 3000
 var bodyParser = require('body-parser');
-app.use(express.static("public"))
+// app.use(express.static("public"))
 app.use(bodyParser.json());
  app.use(bodyParser.urlencoded({
   extended: true
@@ -15,8 +15,9 @@ app.get('/', (req, res) => {
 })
 
 
-app.get('/forms',(req,res)=>{
-  db.query("select * from forms",(err,result)=>{
+app.post('/login',(req,res)=>{
+  console.log(req.body)
+  db.query("select * from students where registerno=? and dob=? ",[req.body.registerno,req.body.dob],(err,result)=>{
     if(err) throw err;
 
     res.send(result)
