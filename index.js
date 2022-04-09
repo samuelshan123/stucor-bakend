@@ -15,12 +15,28 @@ app.get('/', (req, res) => {
 })
 
 
-app.post('/login',(req,res)=>{
+app.post('/login',async (req,res)=>{
   console.log(req.body)
-  db.query("select * from students where registerno=? and dob=? ",[req.body.registerno,req.body.dob],(err,result)=>{
+
+  if (req.body.role === 'student') {
+    var sql_query = `SELECT * FROM students WHERE regno = ? AND dob = ?`
+    var values = [req.body.formdata.regno, req.body.formdata.dob]
+  } else {
+
+    var sql_query = `SELECT * FROM staffs WHERE email = ? AND password = ?`
+    var values = [req.body.formdata.email, req.body.formdata.password]
+    
+  }
+  await db.query(sql_query,values,(err,result)=>{
     if(err) throw err;
 
-    res.send(result)
+    if (result.length>0) {
+      console.log(result);
+      res.send(result)  
+    } else {
+      res.send("invalid")
+      
+    }
   })
 })
 
