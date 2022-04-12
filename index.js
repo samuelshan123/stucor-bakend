@@ -87,7 +87,7 @@ app.post('/getrequests',async (req,res)=>{
     var values = [req.body.department,req.body.semester]
   }
   else if(req.body.role === 'principal') {
-    var sql_query=`SELECT * FROM stucor.forms`
+    var sql_query=`SELECT * FROM stucor.forms where stucor.forms.status='AFH';`
   }
 
   await db.query(sql_query,values,(err,result)=>{
@@ -112,8 +112,8 @@ app.post('/action',async (req,res)=>{
     var values = [req.body.status,req.body.incharge_id,req.body.iactioned_at,req.body.id,]
   }
   else if(req.body.role === 'hod') {
-    var sql_query = `UPDATE forms SET status=?,hod_id=?,hactioned_at=? WHERE id=?`
-    var values = [req.body.status,req.body.id,req.body.hod_id,req.body.hactioned_at]
+    var sql_query = `UPDATE forms SET status=?,hod_id=?,hactioned_at=? WHERE user_id=?`
+    var values = [req.body.status,req.body.hod_id,req.body.hactioned_at,req.body.id]
   }
  
   await db.query(sql_query,values,(err,result)=>{
@@ -132,7 +132,7 @@ app.post('/action',async (req,res)=>{
 
 app.post('/notifications',async (req,res)=>{
   console.log(req.body);
-  var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.iactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.incharge_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFI';`
+  var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.iactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.incharge_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFI'`
   var values = [req.body.id]
   await db.query(sql_query,values,(err,result)=>{
     if(err) throw err;
@@ -143,6 +143,40 @@ app.post('/notifications',async (req,res)=>{
       res.send({status:"failed"})
     }
   })
+})
+
+// get AfH forms
+app.post('/hodApproved',async (req,res)=>{
+  console.log(req.body);
+  var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.hactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.hod_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFH'`
+  var values = [req.body.id]
+  await db.query(sql_query,values,(err,result)=>{
+    if(err) throw err;
+    if (result.length>0) {
+      console.log(result);
+      res.send({data:result,status:"success"})  
+    } else {
+      res.send({status:"failed"})
+    }
+  })
+})
+
+
+// completed forms
+
+app.post('/completed',async (req,res)=>{
+  console.log(req.body);
+  var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.hactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.hod_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFH' and stucor.forms.form_type ='leave form'`
+  var values = [req.body.id]
+  await db.query(sql_query,values,(err,result)=>{
+    if(err) throw err;
+    if (result.length>0) {
+      console.log(result);
+      res.send({data:result,status:"success"})  
+    } else {
+      res.send({status:"failed"})
+    }
+  })  
 })
 
 // checks server ststus-----------------------------------------------------------------------------------------
