@@ -108,15 +108,16 @@ app.post('/action',async (req,res)=>{
   console.log(req.body);
 
   if (req.body.role=== 'in-charge') {
-    var sql_query = `UPDATE forms SET status=?,incharge_id=?,iactioned_at=? WHERE user_id=?`
-    var values = [req.body.status,req.body.incharge_id,req.body.iactioned_at,req.body.id,]
+    var sql_query = `UPDATE forms SET status=?,incharge_id=?,iactioned_at=? WHERE user_id=? and request_id=?`
+    var values = [req.body.status,req.body.incharge_id,req.body.iactioned_at,req.body.id,req.body.request_id]
   }
   else if(req.body.role === 'hod') {
-    var sql_query = `UPDATE forms SET status=?,hod_id=?,hactioned_at=? WHERE user_id=?`
-    var values = [req.body.status,req.body.hod_id,req.body.hactioned_at,req.body.id]
+    var sql_query = `UPDATE forms SET status=?,hod_id=?,hactioned_at=? WHERE user_id=? and request_id=?`
+    var values = [req.body.status,req.body.hod_id,req.body.hactioned_at,req.body.id,req.body.request_id]
   }
  
   await db.query(sql_query,values,(err,result)=>{
+    console.log(result);
     if(err) throw err;
     if (result.affectedRows>0) {
       res.send({status:"success"})  
@@ -132,7 +133,7 @@ app.post('/action',async (req,res)=>{
 
 app.post('/notifications',async (req,res)=>{
   console.log(req.body);
-  var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.iactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.incharge_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFI'`
+  var sql_query = `SELECT stucor.staffs.name,stucor.forms.request_id,stucor.forms.status,stucor.forms.iactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.incharge_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFI'`
   var values = [req.body.id]
   await db.query(sql_query,values,(err,result)=>{
     if(err) throw err;
@@ -167,6 +168,41 @@ app.post('/hodApproved',async (req,res)=>{
 app.post('/completed',async (req,res)=>{
   console.log(req.body);
   var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.hactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.hod_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFH' and stucor.forms.form_type ='leave form'`
+  var values = [req.body.id]
+  await db.query(sql_query,values,(err,result)=>{
+    if(err) throw err;
+    if (result.length>0) {
+      console.log(result);
+      res.send({data:result,status:"success"})  
+    } else {
+      res.send({status:"failed"})
+    }
+  })  
+})
+
+// need enquire forms
+
+app.post('/inchargeInquiry',async (req,res)=>{
+  console.log(req.body);
+  var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.iactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.incharge_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='EFI'`
+
+  var values = [req.body.id]
+  await db.query(sql_query,values,(err,result)=>{
+    if(err) throw err;
+    if (result.length>0) {
+      console.log(result);
+      res.send({data:result,status:"success"})  
+    } else {
+      res.send({status:"failed"})
+    }
+  })  
+})
+
+// hod enquiry 
+
+app.post('/hodInquiry',async (req,res)=>{
+  console.log(req.body);
+  var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.hactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.hod_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='EFH'`
   var values = [req.body.id]
   await db.query(sql_query,values,(err,result)=>{
     if(err) throw err;
