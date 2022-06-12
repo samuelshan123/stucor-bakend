@@ -1,6 +1,7 @@
 const express = require('express')
 const db=require('./db_connection')
 const app = express()
+const cors=require('cors')
 const port = 3000
 var bodyParser = require('body-parser');
 // app.use(express.static("public"))
@@ -9,6 +10,9 @@ app.use(bodyParser.json());
   extended: true
 }));
 
+app.use(cors({
+  origin: '*'
+}));
 // api calls -----------------------------------------------------------------------------------
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -313,6 +317,40 @@ app.post('/studentHaction',async (req,res)=>{
 
 }
 )
+
+//check out form {}
+app.post('/checkoutForm',async (req,res)=>{
+  console.log(req.body);
+  var sql_query = `UPDATE stucor.forms SET status='CO' WHERE user_id=? request_id=?`
+  var values = [req.body.id]
+  await db.query(sql_query,values,(err,result)=>{
+    if(err) throw err;
+    if (result.length>0) {
+      console.log(result);
+      res.send({status:"success"})  
+    } else {
+      res.send({status:"failed"})
+    }
+  })  
+})
+
+//checked out form
+app.post('/checkedOutForm',async (req,res)=>{
+  console.log(req.body);
+  var sql_query=`SELECT * FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id 
+  where     stucor.forms.status='CO' order by stucor.forms.request_id desc`
+  var values = [req.body.department,req.body.semester]
+  await db.query(sql_query,values,(err,result)=>{
+    if(err) throw err;
+    if (result.length>0) {
+      console.log(result);
+      res.send({requests:result,status:"success"})  
+    } else {
+      res.send({status:"failed"})
+    }
+  })
+
+})
 
 // checks server ststus-----------------------------------------------------------------------------------------
 
