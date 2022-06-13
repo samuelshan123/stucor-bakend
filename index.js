@@ -317,17 +317,37 @@ app.post('/studentHaction',async (req,res)=>{
 
 }
 )
+// check form already checked
+app.post('/verifycheckForm',async (req,res)=>{
+console.log('hitted');
+  var sql_query=`SELECT * FROM stucor.forms where forms.request_id=?`
+  var values = [req.body.request_id]
+  await db.query(sql_query,values,(err,result)=>{
+    if(err) throw err;
+    console.log(result);
+    if (result.length>0 && result[0].status==='completed') {
+      console.log('hello');
+      console.log(result);
+      res.send({data:result,status:"success"})  
+    }
+    // else if(){}
+     else {
+      res.send({status:"failed"})
+    }
+  })
+
+})
 
 //check out form {}
 app.post('/checkoutForm',async (req,res)=>{
   console.log(req.body);
-  var sql_query = `UPDATE stucor.forms SET status='CO' WHERE user_id=? request_id=?`
-  var values = [req.body.id]
+  var sql_query = `UPDATE stucor.forms SET forms.status='CO', forms.security_id=? ,forms.checked_at=? WHERE forms.request_id=?`
+  var values = [req.body.security_id,req.body.checked_at,req.body.request_id]
   await db.query(sql_query,values,(err,result)=>{
     if(err) throw err;
-    if (result.length>0) {
+    if (result.affectedRows>0) {
       console.log(result);
-      res.send({status:"success"})  
+      res.send({status:"success",data:result})  
     } else {
       res.send({status:"failed"})
     }
@@ -337,9 +357,23 @@ app.post('/checkoutForm',async (req,res)=>{
 //checked out form
 app.post('/checkedOutForm',async (req,res)=>{
   console.log(req.body);
-  var sql_query=`SELECT * FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id 
-  where     stucor.forms.status='CO' order by stucor.forms.request_id desc`
-  var values = [req.body.department,req.body.semester]
+  if (req.body.role==='in-charge') {
+    var sql_query = `SELECT * FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id where  stucor.forms.status='CO'and stucor.students.department=? and stucor.students.semester=? order by stucor.forms.request_id desc`
+    var values = [req.body.department,req.body.semester]
+
+  }
+  else if(req.body.role==='hod'){
+    var sql_query = `SELECT * FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id where  stucor.forms.status='CO' and stucor.students.department=? order by stucor.forms.request_id desc`
+    var values = [req.body.department]
+
+  }
+  else{
+    var sql_query=`SELECT * FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id 
+    where     stucor.forms.status='CO' order by stucor.forms.request_id desc`
+    var values = null
+  }
+  
+
   await db.query(sql_query,values,(err,result)=>{
     if(err) throw err;
     if (result.length>0) {
