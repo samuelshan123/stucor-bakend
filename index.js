@@ -194,7 +194,7 @@ app.post('/hodApproved',async (req,res)=>{
 app.post('/completed',async (req,res)=>{
   console.log(req.body);
   if (req.body.role==='student') {
-    var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.hactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.hod_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFH' and stucor.forms.form_type ='leave form' order by stucor.forms.request_id desc`
+    var sql_query = `SELECT stucor.staffs.name,stucor.forms.status,stucor.forms.hactioned_at,stucor.forms.description,stucor.forms.form_type,stucor.forms.requested_at FROM stucor.forms left join stucor.students on stucor.students.id =stucor.forms.user_id left join stucor.staffs on stucor.forms.hod_id= stucor.staffs.id WHERE stucor.students.id=? and stucor.forms.status='AFH'  and stucor.forms.form_type ='leave form' order by stucor.forms.request_id desc`
   var values = [req.body.id] 
   }
   else if(req.body.role==='hod') {
